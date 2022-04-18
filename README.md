@@ -7,3 +7,6 @@ This program is probably not super omptimized, but feel free to use any of it if
 This program was used it order to get the average value of a Gin Rummy hand by running millions of hands and determining the points in each one, and running
 a simple analysis on it for a school project. The method used to pair the cards is something I came up with, and went through a couple of runthroughs to get it
 working properly, and to account for some fringe cases. For more clarification on exactly how the program works, code is extensively commented
+
+The "data generator" file is where all the simulation and data gathering occurs, and its where you'll find the method I used for pairing the cards.
+The "statisical analysis" file is a quick little script to generate a graph and display the statistical values I needed.
