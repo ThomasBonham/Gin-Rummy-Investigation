@@ -176,7 +176,12 @@ def pair_hands(hand):
     cards, and one that defines all paired cards. First, the function will run through a process that prioritizes runs
     over sets, by first going through all the suits in the suit list and finding all of the runs and adding them to
     the paired cards list, and then going through the rest of the unpaired cards in the normal list and finding all sets.
-    The function then does the reverse, prioritizing the """
+    The function then does the reverse, prioritizing the sets over the runs, adding any sets it finds to its pos_pairs list, 
+    and then removing those cards from the suit list. Then it compares the two to see which score is lower, and uses the 
+    lower score. This is done for cases where a card forms both a run and straight, and this method allows it to choose
+    whichever eliminates the most points"""
+    
+    # init vars
     num_hand, suit_hand = hand_sort(hand)
     paired_cards = []
     unpaired_cards = []
@@ -195,25 +200,31 @@ def pair_hands(hand):
     # we start by finding the runs in the hand
     for i in range(len(runs_suit_hand)):
         pos_pairs = []
+        # if a suit has less than 3 cards, we skip it
         if len(runs_suit_hand[i]) < 3:
             pass
         else:
             for j in range(len(runs_suit_hand[i])):
                 try:
                     card = runs_suit_hand[i][j]
+                    # the check card is typically just the card that's to the right of the card
                     check_card = runs_suit_hand[i][j + 1]
                     paired, set_type = check_paired(card, check_card)
+                    # set_type == 2 means that its a run pairing
                     if paired and set_type == 2:
+                        # this is nessacary so that the card still gets into the pos_pairs list, but doesn't get added more than once
                         if len(pos_pairs) < 1:
                             pos_pairs.append(card)
                         pos_pairs.append(check_card)
                     else:
+                        # when it stops pairing, it checks if its a valid meld, and adds it if it is
                         if len(pos_pairs) >= 3:
                             for c in pos_pairs:
                                 runs_paired.append(c)
                                 runs_num_hand.remove(c)
                         pos_pairs = []
-
+                
+                # except statement is here for when the check_card var is out of range.
                 except IndexError:
                     pass
 
@@ -226,25 +237,32 @@ def pair_hands(hand):
     # then we find sets of cards
 
     pos_pairs = []
+    # if there are less than 3 cards left, it doesn't bother running the rest of the process
     if len(runs_num_hand) < 3:
         pass
     else:
         for i in range(len(runs_num_hand)):
             try:
                 card = runs_num_hand[i]
+                # the check card is typically just the card that's to the right of the card
                 check_card = runs_num_hand[i + 1]
                 paired, set_type = check_paired(card, check_card)
+                # set_type == 1 means that its a set pairing
                 if paired and set_type == 1:
-                    if len(pos_pairs) < 1:
+                    # this is nessacary so that the card still gets into the pos_pairs list, but doesn't get added more than once
+                    if len(pos_pairs) < 1:                     
                         pos_pairs.append(card)
                     pos_pairs.append(check_card)
                 else:
+                    # when it is no longer pairing, its checks to see if there is a valid meld
                     if len(pos_pairs) >= 3:
                         for c in pos_pairs:
                             runs_paired.append(c)
                             runs_num_hand.remove(c)
                     pos_pairs = []
+            # except statement is here because the check_card gets out of range on the last runthrough
             except IndexError:
+                # checks for valid melds
                 if len(pos_pairs) >= 3:
                     for c in pos_pairs:
                         runs_paired.append(c)
@@ -255,7 +273,7 @@ def pair_hands(hand):
     for v in runs_num_hand:
         runs_unpaired.append(v)
 
-    # now we create the other list, where it prioritizes sets over runs
+    # now we create the other list, where it prioritizes sets over runs, same comments apply
     pos_pairs = []
     for i in range(len(sets_num_hand)):
         try:
@@ -271,6 +289,7 @@ def pair_hands(hand):
                     for c in pos_pairs:
                         sets_paired.append(c)
                         sets_num_hand.remove(c)
+                        # this statement here allows it to remove the paired card from the right suit list
                         sets_suit_hand[c.suit_int].remove(c)
 
                 pos_pairs = []
@@ -279,11 +298,13 @@ def pair_hands(hand):
                 for c in pos_pairs:
                     sets_paired.append(c)
                     sets_num_hand.remove(c)
+                    # this statement here allows it to remove the paired card from the right suit list
                     sets_suit_hand[c.suit_int].remove(c)
             pos_pairs = []
 
     pos_pairs = []
-
+    
+    # runs
     for i in range(len(sets_suit_hand)):
         pos_pairs = []
         if len(sets_suit_hand[i]) < 3:
@@ -313,18 +334,22 @@ def pair_hands(hand):
                     sets_paired.append(c)
                     sets_num_hand.remove(c)
             pos_pairs = []
-
+    
+    # this takes all cards left in the hand and adds them to unpaired card list so they can be scored
     for v in sets_num_hand:
         sets_unpaired.append(v)
-
+    
+    # this calculates the score for the runthrough where runs are proiritized
     runs_score = 0
     for i in runs_unpaired:
         runs_score += i.points
-
+    
+    # calculating the score for runthrough where sets are proiritized
     sets_score = 0
     for i in sets_unpaired:
         sets_score += i.points
-
+    
+    # comparing the two scores
     if sets_score > runs_score:
         paired_cards = runs_paired
         unpaired_cards = runs_unpaired
@@ -336,6 +361,8 @@ def pair_hands(hand):
 
 
 data = []
+# this list here is just some jank that I did to allow me to test the effects of when I take specfific cards out, and be able to run
+# a simulation that way
 ogdecklist = [["diamonds", 1], ["diamonds", 2], ["diamonds", 3], ["diamonds", 4], ["diamonds", 5], ["diamonds", 6],
               ["diamonds", 7], ["diamonds", 8], ["diamonds", 9], ["diamonds", 10], ["diamonds", 11], ["diamonds", 12],
               ["diamonds", 13], ["spades", 1], ["spades", 2], ["spades", 3], ["spades", 4], ["spades", 5],
@@ -357,6 +384,7 @@ decklist = [["diamonds", 1], ["diamonds", 2], ["diamonds", 3], ["diamonds", 4], 
               ["hearts", 2], ["hearts", 3], ["hearts", 4], ["hearts", 5], ["hearts", 6], ["hearts", 7], ["hearts", 8],
               ["hearts", 9], ["hearts", 10], ["hearts", 11], ["hearts", 12], ["hearts", 13]]
 
+# the loop that runs the simulation, adding the score returned to the data list, which is exported to a json file
 for i in range(1000000):
     deck = Deck(decklist)
     hand = deck.new_hand(10)
@@ -365,6 +393,8 @@ for i in range(1000000):
     for i in unpaired_cards:
         score += i.points
     data.append(score)
+    
+# testing code
 '''
 deck = Deck()
 hand = deck.new_hand(10)
@@ -394,6 +424,7 @@ for i in unpaired_cards:
     score += i.points
 print(f"SCORE: {score}")'''
 
+# json stuff
 with open(data_test_loc, 'w') as f:
     json.dump(data, f)
 f.close()
